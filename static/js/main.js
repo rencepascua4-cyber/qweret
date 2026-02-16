@@ -11,7 +11,7 @@ const textDisplayArea = document.getElementById('textDisplayArea');
 const pageCountBadge = document.getElementById('pageCountBadge');
 const pageCountPreview = document.getElementById('pageCountPreview');
 
-// API endpoint
+// API endpoint - FIXED to use relative path
 const API_ENDPOINT = '/api/clean-pdf';
 
 // Device detection
@@ -24,13 +24,12 @@ const MAX_FILE_SIZE = isMobile ? 15 * 1024 * 1024 : 50 * 1024 * 1024; // 15MB mo
 // Helper: sanitize HTML
 const escapeHTML = (unsafe) => {
     if (!unsafe) return '';
-    return unsafe.replace(/[&<>"]/g, (m) => {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        if (m === '"') return '&quot;';
-        return m;
-    });
+    return unsafe
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 };
 
 // Helper: format file size
@@ -116,16 +115,28 @@ const extractTextViaAPI = async (file) => {
             body: formData
         });
 
-        const data = await response.json();
-
+        // Check if response is ok first
         if (!response.ok) {
-            throw new Error(data.error || 'Failed to extract text');
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Server error: ${response.status}`);
         }
 
+        const data = await response.json();
         return { success: true, data };
+        
     } catch (error) {
         console.error('API error:', error);
-        return { success: false, error: error.message };
+        
+        // Better error messages for common issues
+        let errorMessage = error.message;
+        
+        if (error.message.includes('Failed to fetch')) {
+            errorMessage = 'Cannot connect to server. Make sure Flask is running on port 5000.';
+        } else if (error.message.includes('NetworkError')) {
+            errorMessage = 'Network error. Check your connection and try again.';
+        }
+        
+        return { success: false, error: errorMessage };
     }
 };
 
@@ -171,6 +182,52 @@ const processPdf = async (file) => {
     if (result.success) {
         // Display the cleaned text from Flask
         textDisplayArea.innerHTML = '';
+        
+        // Create stats section if available
+        if (result.data.stats) {
+            const statsDiv = document.createElement('div');
+            statsDiv.style.cssText = `
+                background: #f3f4f6;
+                padding: 0.75rem 1rem;
+                border-radius: 12px;
+                margin-bottom: 1.5rem;
+                font-size: 0.85rem;
+                color: #4b5563;
+                display: flex;
+                gap: 1.5rem;
+                flex-wrap: wrap;
+            `;
+            statsDiv.innerHTML = `
+                <span>📊 Characters: ${result.data.stats.characters?.toLocaleString() || '—'}</span>
+                <span>📝 Words: ${result.data.stats.words?.toLocaleString() || '—'}</span>
+                <span>📏 Lines: ${result.data.stats.lines?.toLocaleString() || '—'}</span>
+            `;
+            textDisplayArea.appendChild(statsDiv);
+        }
+        
+        // Create metadata section if available
+        if (result.data.metadata?.title || result.data.metadata?.author) {
+            const metadataDiv = document.createElement('div');
+            metadataDiv.style.cssText = `
+                background: #f0f9ff;
+                padding: 0.75rem 1rem;
+                border-radius: 12px;
+                margin-bottom: 1.5rem;
+                font-size: 0.85rem;
+                color: #0369a1;
+            `;
+            let metadataHTML = '';
+            if (result.data.metadata.title) {
+                metadataHTML += `<div>📌 Title: ${escapeHTML(result.data.metadata.title)}</div>`;
+            }
+            if (result.data.metadata.author) {
+                metadataHTML += `<div style="margin-top: 0.25rem;">✍️ Author: ${escapeHTML(result.data.metadata.author)}</div>`;
+            }
+            metadataDiv.innerHTML = metadataHTML;
+            textDisplayArea.appendChild(metadataDiv);
+        }
+        
+        // Create text container
         const textContainer = document.createElement('div');
         textContainer.style.whiteSpace = 'pre-wrap';
         textContainer.style.wordBreak = 'break-word';
@@ -187,12 +244,19 @@ const processPdf = async (file) => {
             pageCountPreview.innerText = `${result.data.metadata.pages} page${result.data.metadata.pages > 1 ? 's' : ''}`;
         }
     } else {
-        // Show error message
-        textDisplayArea.innerHTML = `<div class="placeholder-text" style="color: #b34a4a;">
-            ❌ Failed to extract text: ${escapeHTML(result.error || 'Unknown error')}
-        </div>`;
+        // Show error message with styling
+        textDisplayArea.innerHTML = `
+            <div class="placeholder-text" style="color: #b34a4a; background: #fee2e2; border-color: #fca5a5;">
+                ❌ ${escapeHTML(result.error || 'Unknown error occurred')}
+            </div>
+        `;
         pageCountBadge.innerText = 'error';
         pageCountPreview.innerText = 'error';
+        
+        // Also show an alert for critical errors
+        if (result.error.includes('Cannot connect to server')) {
+            alert('⚠️ Flask Server Not Running\n\nPlease start your Flask server:\n\n1. Open terminal\n2. Navigate to project folder\n3. Run: python app.py\n4. Wait for "Running on http://127.0.0.1:5000"\n5. Try uploading again');
+        }
     }
 };
 
@@ -258,6 +322,11 @@ window.addEventListener('load', () => {
             hintElement.textContent = `Maximum size ${(MAX_FILE_SIZE / (1024 * 1024)).toFixed(0)} MB · tap to select`;
         }
     }
+    
+    // Check if Flask server is running
+    fetch(API_ENDPOINT.replace('/api/clean-pdf', '/'))
+        .then(() => console.log('✅ Flask server is running'))
+        .catch(() => console.warn('⚠️ Flask server not detected. Start with: python app.py'));
 });
 
 // Handle orientation changes on mobile
