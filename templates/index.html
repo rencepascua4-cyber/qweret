@@ -28,8 +28,8 @@
             min-height: calc(100vh - 3rem);
         }
 
-        /* LEFT PANEL - Content */
-        .content-panel {
+        /* LEFT PANEL - Document */
+        .document-panel {
             background: white;
             border-radius: 12px;
             padding: 1.5rem;
@@ -38,8 +38,8 @@
             flex-direction: column;
         }
 
-        /* RIGHT PANEL - Document */
-        .document-panel {
+        /* RIGHT PANEL - Content */
+        .content-panel {
             background: white;
             border-radius: 12px;
             padding: 1.5rem;
@@ -82,6 +82,16 @@
             text-transform: uppercase;
         }
 
+        .multi-badge {
+            background: #059669;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
         .ready-badge {
             background: #dbeafe;
             color: #1e3a8a;
@@ -91,51 +101,12 @@
             font-weight: 500;
         }
 
-        /* Content Area */
-        .content-area {
-            background: #f9fafb;
-            border: 2px dashed #d1d5db;
-            border-radius: 8px;
-            flex: 1;
-            padding: 2rem;
-            overflow-y: auto;
-            max-height: calc(100vh - 12rem);
-        }
-
-        .content-placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            min-height: 400px;
-            color: #9ca3af;
-        }
-
-        .placeholder-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-        }
-
-        .placeholder-text {
-            font-size: 0.95rem;
-        }
-
-        .extracted-text {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            line-height: 1.7;
-            color: #1f2937;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-
         /* Upload Zone */
         .upload-zone {
             background: #f9fafb;
             border: 2px dashed #d1d5db;
             border-radius: 8px;
-            padding: 3rem 2rem;
+            padding: 2rem 1.5rem;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s;
@@ -157,15 +128,15 @@
         }
 
         .upload-icon {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
         }
 
         .upload-title {
             font-size: 1rem;
             font-weight: 600;
             color: #1f2937;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
         }
 
         .upload-subtitle {
@@ -173,9 +144,138 @@
             color: #6b7280;
         }
 
+        /* Files List - NEW for multiple upload */
+        .files-list {
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 1.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .files-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: #f3f4f6;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #4b5563;
+        }
+
+        .clear-btn {
+            background: transparent;
+            border: none;
+            color: #6b7280;
+            font-size: 0.75rem;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .clear-btn:hover {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            transition: background 0.1s;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-item:hover {
+            background: #f3f4f6;
+        }
+
+        .file-item.active {
+            background: #dbeafe;
+            border-left: 3px solid #1e3a8a;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .file-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .file-details {
+            overflow: hidden;
+        }
+
+        .file-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #1f2937;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+        }
+
+        .file-size {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 0.25rem;
+            flex-shrink: 0;
+        }
+
+        .file-action-btn {
+            background: transparent;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .file-action-btn:hover {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        .file-action-btn.remove:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .empty-files {
+            padding: 1.5rem;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.875rem;
+            font-style: italic;
+        }
+
         /* Preview Section */
         .preview-section {
-            background: #f0f9ff;
+            background: #f9fafb;
             border-radius: 8px;
             padding: 1rem;
             flex: 1;
@@ -199,20 +299,6 @@
             gap: 0.5rem;
         }
 
-        .collapse-btn {
-            background: transparent;
-            border: none;
-            color: #6b7280;
-            font-size: 1.25rem;
-            cursor: pointer;
-            padding: 0.25rem;
-            line-height: 1;
-        }
-
-        .collapse-btn:hover {
-            color: #1f2937;
-        }
-
         .preview-box {
             background: white;
             border-radius: 6px;
@@ -222,23 +308,55 @@
             justify-content: center;
             overflow: auto;
             padding: 1rem;
-            min-height: 300px;
+            min-height: 250px;
+            border: 1px solid #e5e7eb;
         }
 
         .preview-placeholder {
             color: #9ca3af;
             font-size: 0.875rem;
             text-align: center;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
         }
 
         #pdfCanvas {
             max-width: 100%;
             height: auto;
             border-radius: 4px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Content Area */
+        .content-area {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            max-height: calc(100vh - 12rem);
+        }
+
+        .content-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 400px;
+            color: #9ca3af;
+        }
+
+        .placeholder-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .extracted-text {
+            font-family: 'Inter', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #1f2937;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
 
         /* Loading */
@@ -246,8 +364,8 @@
             display: inline-block;
             width: 40px;
             height: 40px;
-            border: 4px solid #e5e7eb;
-            border-top: 4px solid #3b82f6;
+            border: 3px solid #e5e7eb;
+            border-top: 3px solid #3b82f6;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -259,31 +377,61 @@
 
         /* Scrollbar */
         .content-area::-webkit-scrollbar,
-        .preview-box::-webkit-scrollbar {
+        .preview-box::-webkit-scrollbar,
+        .files-list::-webkit-scrollbar {
             width: 8px;
         }
 
         .content-area::-webkit-scrollbar-track,
-        .preview-box::-webkit-scrollbar-track {
+        .preview-box::-webkit-scrollbar-track,
+        .files-list::-webkit-scrollbar-track {
             background: #f3f4f6;
             border-radius: 4px;
         }
 
         .content-area::-webkit-scrollbar-thumb,
-        .preview-box::-webkit-scrollbar-thumb {
+        .preview-box::-webkit-scrollbar-thumb,
+        .files-list::-webkit-scrollbar-thumb {
             background: #d1d5db;
             border-radius: 4px;
         }
 
-        .content-area::-webkit-scrollbar-thumb:hover,
-        .preview-box::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
+        /* Responsive - Mobile View */
+        @media (max-width: 768px) {
             .app-container {
                 grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            /* Hide first page preview on mobile */
+            .preview-section {
+                display: none;
+            }
+            
+            .document-panel {
+                padding: 1rem;
+            }
+            
+            .upload-zone {
+                padding: 1.5rem 1rem;
+            }
+            
+            .files-list {
+                max-height: 250px;
+            }
+            
+            .file-name {
+                max-width: 150px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 0.75rem;
+            }
+            
+            .file-name {
+                max-width: 120px;
             }
         }
     </style>
@@ -297,28 +445,37 @@
                     <span class="header-icon">📄</span>
                     <h2 class="header-title">Document</h2>
                 </div>
-                <span class="pdf-badge">PDF</span>
+                <span class="pdf-badge">PDF <span class="multi-badge">MULTI</span></span>
             </div>
 
+            <!-- Upload Zone -->
             <div class="upload-zone" id="uploadZone">
-                <input type="file" id="fileInput" accept=".pdf">
+                <input type="file" id="fileInput" accept=".pdf" multiple>
                 <div class="upload-icon">📘</div>
                 <div class="upload-title">Browse or drop PDF</div>
                 <div class="upload-subtitle">Maximum size 50 MB · secured client-side</div>
             </div>
 
-            <div class="preview-section">
+            <!-- Files List (Multiple PDFs) -->
+            <div class="files-list" id="filesListContainer" style="display: none;">
+                <div class="files-header">
+                    <span id="fileCount">0 PDFs selected</span>
+                    <button class="clear-btn" id="clearAllBtn">Clear all</button>
+                </div>
+                <div id="filesList"></div>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="preview-section" id="previewSection">
                 <div class="preview-header">
                     <div class="preview-title">
                         <span>📄</span>
                         <span>First page preview</span>
                     </div>
-                    <button class="collapse-btn" id="collapseBtn">−</button>
                 </div>
                 <div class="preview-box" id="previewBox">
                     <div class="preview-placeholder">
-                        <span>⚫</span>
-                        <span>No PDF loaded — upload to preview</span>
+                        No PDF loaded — upload to preview
                     </div>
                 </div>
             </div>
@@ -331,7 +488,7 @@
                     <span class="header-icon">📋</span>
                     <h2 class="header-title">Content</h2>
                 </div>
-                <span class="ready-badge">ready</span>
+                <span class="ready-badge" id="readyBadge">ready</span>
             </div>
 
             <div class="content-area" id="contentArea">
@@ -348,89 +505,232 @@
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-        const uploadZone = document.getElementById('uploadZone');
+        // DOM elements
         const fileInput = document.getElementById('fileInput');
+        const uploadZone = document.getElementById('uploadZone');
         const previewBox = document.getElementById('previewBox');
         const contentArea = document.getElementById('contentArea');
-        const collapseBtn = document.getElementById('collapseBtn');
+        const readyBadge = document.getElementById('readyBadge');
+        const filesListContainer = document.getElementById('filesListContainer');
+        const filesList = document.getElementById('filesList');
+        const fileCountSpan = document.getElementById('fileCount');
+        const clearAllBtn = document.getElementById('clearAllBtn');
 
-        let currentPDF = null;
-        let previewCollapsed = false;
+        // Store multiple PDFs
+        let pdfFiles = [];
+        let activePdfIndex = -1;
 
-        // Upload interactions
-        uploadZone.addEventListener('click', () => fileInput.click());
+        // API endpoint
+        const API_ENDPOINT = '/api/clean-pdf';
 
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file && file.type === 'application/pdf') {
-                handlePDF(file);
+        // Helper: format file size
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        // Helper: escape HTML
+        function escapeHTML(str) {
+            return str.replace(/[&<>"]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                if (m === '"') return '&quot;';
+                return m;
+            });
+        }
+
+        // Update files list UI
+        function updateFilesList() {
+            if (pdfFiles.length === 0) {
+                filesListContainer.style.display = 'none';
+                return;
+            }
+
+            filesListContainer.style.display = 'block';
+            fileCountSpan.innerText = pdfFiles.length + ' PDF' + (pdfFiles.length > 1 ? 's' : '') + ' selected';
+
+            let html = '';
+            pdfFiles.forEach((file, index) => {
+                const isActive = (index === activePdfIndex);
+                html += `
+                    <div class="file-item ${isActive ? 'active' : ''}">
+                        <div class="file-info">
+                            <div class="file-icon">📄</div>
+                            <div class="file-details">
+                                <div class="file-name">${escapeHTML(file.name)}</div>
+                                <div class="file-size">${formatFileSize(file.size)}</div>
+                            </div>
+                        </div>
+                        <div class="file-actions">
+                            <button class="file-action-btn" onclick="viewPdf(${index})" title="View">👁️</button>
+                            <button class="file-action-btn remove" onclick="removePdf(${index})" title="Remove">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+            filesList.innerHTML = html;
+        }
+
+        // View specific PDF
+        window.viewPdf = function(index) {
+            if (index >= 0 && index < pdfFiles.length) {
+                activePdfIndex = index;
+                updateFilesList();
+                processPdf(pdfFiles[index]);
+            }
+        };
+
+        // Remove specific PDF
+        window.removePdf = function(index) {
+            if (index >= 0 && index < pdfFiles.length) {
+                pdfFiles.splice(index, 1);
+                
+                if (pdfFiles.length === 0) {
+                    activePdfIndex = -1;
+                    filesListContainer.style.display = 'none';
+                    previewBox.innerHTML = '<div class="preview-placeholder">No PDF loaded — upload to preview</div>';
+                    contentArea.innerHTML = '<div class="content-placeholder"><div class="placeholder-icon">📄</div><div class="placeholder-text">— Upload a PDF to extract & display text</div></div>';
+                    readyBadge.innerText = 'ready';
+                } else {
+                    if (activePdfIndex === index) {
+                        // If active file was removed, view the first one
+                        activePdfIndex = 0;
+                        processPdf(pdfFiles[0]);
+                    } else if (activePdfIndex > index) {
+                        activePdfIndex--;
+                    }
+                    updateFilesList();
+                }
+                
+                // Reset file input to allow re-upload
+                fileInput.value = '';
+            }
+        };
+
+        // Clear all files
+        clearAllBtn.addEventListener('click', function() {
+            pdfFiles = [];
+            activePdfIndex = -1;
+            filesListContainer.style.display = 'none';
+            previewBox.innerHTML = '<div class="preview-placeholder">No PDF loaded — upload to preview</div>';
+            contentArea.innerHTML = '<div class="content-placeholder"><div class="placeholder-icon">📄</div><div class="placeholder-text">— Upload a PDF to extract & display text</div></div>';
+            readyBadge.innerText = 'ready';
+            fileInput.value = '';
+        });
+
+        // Upload handlers
+        uploadZone.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            
+            // Filter PDFs
+            const validFiles = files.filter(f => f.type === 'application/pdf');
+            
+            if (validFiles.length === 0) {
+                alert('Please select PDF files only');
+                return;
+            }
+
+            // Check size (50MB max)
+            const oversized = validFiles.filter(f => f.size > 50 * 1024 * 1024);
+            if (oversized.length > 0) {
+                alert('Some files exceed 50MB limit');
+                return;
+            }
+
+            // Add to array
+            pdfFiles = [...pdfFiles, ...validFiles];
+            
+            // Set active if none
+            if (activePdfIndex === -1 && pdfFiles.length > 0) {
+                activePdfIndex = 0;
+            }
+
+            updateFilesList();
+            
+            // Process the active file
+            if (activePdfIndex >= 0) {
+                processPdf(pdfFiles[activePdfIndex]);
             }
         });
 
-        uploadZone.addEventListener('dragover', (e) => {
+        // Drag and drop
+        uploadZone.addEventListener('dragover', function(e) {
             e.preventDefault();
             uploadZone.classList.add('dragover');
         });
 
-        uploadZone.addEventListener('dragleave', () => {
+        uploadZone.addEventListener('dragleave', function() {
             uploadZone.classList.remove('dragover');
         });
 
-        uploadZone.addEventListener('drop', (e) => {
+        uploadZone.addEventListener('drop', function(e) {
             e.preventDefault();
             uploadZone.classList.remove('dragover');
-            const file = e.dataTransfer.files[0];
-            if (file && file.type === 'application/pdf') {
-                handlePDF(file);
-            } else {
-                alert('Please upload a PDF file');
+            
+            const files = Array.from(e.dataTransfer.files);
+            const validFiles = files.filter(f => f.type === 'application/pdf');
+            
+            if (validFiles.length === 0) {
+                alert('Please drop PDF files only');
+                return;
+            }
+
+            const oversized = validFiles.filter(f => f.size > 50 * 1024 * 1024);
+            if (oversized.length > 0) {
+                alert('Some files exceed 50MB limit');
+                return;
+            }
+
+            pdfFiles = [...pdfFiles, ...validFiles];
+            
+            if (activePdfIndex === -1 && pdfFiles.length > 0) {
+                activePdfIndex = 0;
+            }
+
+            updateFilesList();
+            
+            if (activePdfIndex >= 0) {
+                processPdf(pdfFiles[activePdfIndex]);
             }
         });
 
-        // Collapse button
-        collapseBtn.addEventListener('click', () => {
-            previewCollapsed = !previewCollapsed;
-            if (previewCollapsed) {
-                previewBox.style.display = 'none';
-                collapseBtn.textContent = '+';
-            } else {
-                previewBox.style.display = 'flex';
-                collapseBtn.textContent = '−';
-            }
-        });
-
-        async function handlePDF(file) {
+        // Process PDF (uses your existing logic)
+        async function processPdf(file) {
             try {
-                if (file.size > 50 * 1024 * 1024) {
-                    alert('File size exceeds 50MB');
-                    return;
-                }
-
                 // Show loading
                 previewBox.innerHTML = '<div class="loading"></div>';
                 contentArea.innerHTML = '<div style="text-align: center; padding: 3rem;"><div class="loading"></div><p style="margin-top: 1rem; color: #6b7280;">Processing PDF...</p></div>';
+                readyBadge.innerText = 'processing';
 
-                // Load PDF
+                // Load PDF with pdf.js
                 const arrayBuffer = await file.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-                currentPDF = pdf;
 
-                // Render preview
+                // Render preview (desktop only - hidden on mobile via CSS)
                 await renderPreview(pdf);
 
-                // Extract text
-                await extractText(pdf);
+                // Extract text via API
+                await extractTextViaAPI(file);
 
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error processing PDF');
+                previewBox.innerHTML = '<div class="preview-placeholder">Error loading PDF</div>';
+                contentArea.innerHTML = '<div class="content-placeholder"><div class="placeholder-icon">❌</div><div class="placeholder-text">Error processing PDF</div></div>';
+                readyBadge.innerText = 'error';
             }
         }
 
+        // Render preview (your existing function)
         async function renderPreview(pdf) {
             try {
                 const page = await pdf.getPage(1);
-                const viewport = page.getViewport({ scale: 1.5 });
+                const viewport = page.getViewport({ scale: 1.2 });
 
                 const canvas = document.createElement('canvas');
                 canvas.id = 'pdfCanvas';
@@ -449,43 +749,52 @@
 
             } catch (error) {
                 console.error('Preview error:', error);
-                previewBox.innerHTML = '<div class="preview-placeholder"><span>❌</span><span>Error rendering preview</span></div>';
+                previewBox.innerHTML = '<div class="preview-placeholder">Preview unavailable</div>';
             }
         }
 
-        async function extractText(pdf) {
-            try {
-                let fullText = '';
-                const numPages = pdf.numPages;
+        // Extract text via API (your existing function)
+        async function extractTextViaAPI(file) {
+            const formData = new FormData();
+            formData.append('file', file);
 
-                for (let i = 1; i <= numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map(item => item.str).join(' ');
-                    fullText += `[Page ${i}]\n${pageText}\n\n`;
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to extract text');
                 }
 
-                const cleanedText = cleanText(fullText);
-                contentArea.innerHTML = `<div class="extracted-text">${cleanedText}</div>`;
-                contentArea.scrollTop = 0;
+                // Display the text
+                contentArea.innerHTML = `<div class="extracted-text">${escapeHTML(data.text || '[No text extracted]')}</div>`;
+                readyBadge.innerText = 'ready';
+                
+                if (data.metadata?.pages) {
+                    // You could update something here if needed
+                }
 
             } catch (error) {
-                console.error('Extraction error:', error);
-                contentArea.innerHTML = '<div class="content-placeholder"><div class="placeholder-icon">❌</div><div class="placeholder-text">Error extracting text</div></div>';
+                console.error('API error:', error);
+                contentArea.innerHTML = `<div class="content-placeholder"><div class="placeholder-icon">❌</div><div class="placeholder-text">Error: ${escapeHTML(error.message)}</div></div>`;
+                readyBadge.innerText = 'error';
             }
         }
 
-        function cleanText(text) {
-            let cleaned = text.replace(/[ \t]+/g, ' ');
-            cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
-            cleaned = cleaned.split('\n').map(line => line.trim()).join('\n');
-            cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-            cleaned = cleaned.replace(/(\w)-\s+(\w)/g, '$1$2');
-            cleaned = cleaned.replace(/[""]/g, '"');
-            cleaned = cleaned.replace(/['']/g, "'");
-            cleaned = cleaned.replace(/[\u200B-\u200D\uFEFF]/g, '');
-            return cleaned.trim();
-        }
+        // Initialize
+        window.addEventListener('load', function() {
+            // Check if mobile to update placeholder text
+            if (window.innerWidth <= 768) {
+                const previewTitle = document.querySelector('.preview-title span:last-child');
+                if (previewTitle) {
+                    // Preview is hidden on mobile anyway
+                }
+            }
+        });
     </script>
 </body>
 </html>
