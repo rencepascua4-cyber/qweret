@@ -28,7 +28,7 @@
             min-height: calc(100vh - 3rem);
         }
 
-        /* LEFT PANEL - Content */
+        /* LEFT PANEL - Document */
         .content-panel {
             background: white;
             border-radius: 12px;
@@ -353,9 +353,13 @@
         const previewBox = document.getElementById('previewBox');
         const contentArea = document.getElementById('contentArea');
         const collapseBtn = document.getElementById('collapseBtn');
+        const readyBadge = document.querySelector('.ready-badge');
 
         let currentPDF = null;
         let previewCollapsed = false;
+
+        // API endpoint - update this to match your Flask server URL
+        const API_ENDPOINT = 'http://localhost:5000/api/clean-pdf';
 
         // Upload interactions
         uploadZone.addEventListener('click', () => fileInput.click());
@@ -401,29 +405,37 @@
 
         async function handlePDF(file) {
             try {
+                // File size validation (50MB max)
                 if (file.size > 50 * 1024 * 1024) {
                     alert('File size exceeds 50MB');
                     return;
                 }
 
-                // Show loading
+                // Show loading states
+                readyBadge.textContent = 'processing...';
+                readyBadge.style.background = '#fef3c7';
+                readyBadge.style.color = '#92400e';
+                
                 previewBox.innerHTML = '<div class="loading"></div>';
                 contentArea.innerHTML = '<div style="text-align: center; padding: 3rem;"><div class="loading"></div><p style="margin-top: 1rem; color: #6b7280;">Processing PDF...</p></div>';
 
-                // Load PDF
+                // Load PDF for preview (client-side)
                 const arrayBuffer = await file.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
                 currentPDF = pdf;
 
-                // Render preview
+                // Render preview (client-side)
                 await renderPreview(pdf);
 
-                // Extract text
-                await extractText(pdf);
+                // Extract text via Flask API (server-side with cleaning)
+                await extractTextViaAPI(file);
 
             } catch (error) {
                 console.error('Error:', error);
                 alert('Error processing PDF');
+                readyBadge.textContent = 'error';
+                readyBadge.style.background = '#fee2e2';
+                readyBadge.style.color = '#991b1b';
             }
         }
 
@@ -453,38 +465,116 @@
             }
         }
 
-        async function extractText(pdf) {
-            try {
-                let fullText = '';
-                const numPages = pdf.numPages;
+        // Extract text via Flask API
+        async function extractTextViaAPI(file) {
+            const formData = new FormData();
+            formData.append('file', file);
 
-                for (let i = 1; i <= numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map(item => item.str).join(' ');
-                    fullText += `[Page ${i}]\n${pageText}\n\n`;
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to extract text');
                 }
 
-                const cleanedText = cleanText(fullText);
-                contentArea.innerHTML = `<div class="extracted-text">${cleanedText}</div>`;
-                contentArea.scrollTop = 0;
+                // Display the cleaned text from Flask
+                displayExtractedText(data);
+                
+                // Update badge with page count
+                if (data.metadata?.pages) {
+                    readyBadge.textContent = `${data.metadata.pages} page${data.metadata.pages > 1 ? 's' : ''}`;
+                    readyBadge.style.background = '#dbeafe';
+                    readyBadge.style.color = '#1e3a8a';
+                }
 
             } catch (error) {
-                console.error('Extraction error:', error);
-                contentArea.innerHTML = '<div class="content-placeholder"><div class="placeholder-icon">❌</div><div class="placeholder-text">Error extracting text</div></div>';
+                console.error('API error:', error);
+                contentArea.innerHTML = `
+                    <div class="content-placeholder">
+                        <div class="placeholder-icon">❌</div>
+                        <div class="placeholder-text">Error: ${error.message}</div>
+                    </div>
+                `;
+                readyBadge.textContent = 'error';
+                readyBadge.style.background = '#fee2e2';
+                readyBadge.style.color = '#991b1b';
             }
         }
 
-        function cleanText(text) {
-            let cleaned = text.replace(/[ \t]+/g, ' ');
-            cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
-            cleaned = cleaned.split('\n').map(line => line.trim()).join('\n');
-            cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-            cleaned = cleaned.replace(/(\w)-\s+(\w)/g, '$1$2');
-            cleaned = cleaned.replace(/[""]/g, '"');
-            cleaned = cleaned.replace(/['']/g, "'");
-            cleaned = cleaned.replace(/[\u200B-\u200D\uFEFF]/g, '');
-            return cleaned.trim();
+        // Display extracted text with formatting
+        function displayExtractedText(data) {
+            const text = data.text || 'No text extracted';
+            
+            // Create stats section
+            const statsHTML = data.stats ? `
+                <div style="
+                    background: #f3f4f6;
+                    padding: 0.75rem 1rem;
+                    border-radius: 6px;
+                    margin-bottom: 1.5rem;
+                    font-size: 0.85rem;
+                    color: #4b5563;
+                    display: flex;
+                    gap: 1.5rem;
+                    flex-wrap: wrap;
+                ">
+                    <span>📊 Characters: ${data.stats.characters?.toLocaleString() || '—'}</span>
+                    <span>📝 Words: ${data.stats.words?.toLocaleString() || '—'}</span>
+                    <span>📏 Lines: ${data.stats.lines?.toLocaleString() || '—'}</span>
+                </div>
+            ` : '';
+
+            // Create metadata section if available
+            const metadataHTML = data.metadata?.title ? `
+                <div style="
+                    background: #f0f9ff;
+                    padding: 0.75rem 1rem;
+                    border-radius: 6px;
+                    margin-bottom: 1.5rem;
+                    font-size: 0.85rem;
+                    color: #0369a1;
+                ">
+                    ${data.metadata.title ? `<div>📌 Title: ${escapeHTML(data.metadata.title)}</div>` : ''}
+                    ${data.metadata.author ? `<div>✍️ Author: ${escapeHTML(data.metadata.author)}</div>` : ''}
+                </div>
+            ` : '';
+
+            // Combine everything
+            const fullHTML = `
+                ${statsHTML}
+                ${metadataHTML}
+                <div class="extracted-text">${escapeHTML(text)}</div>
+            `;
+
+            contentArea.innerHTML = fullHTML;
+            contentArea.scrollTop = 0;
+        }
+
+        // Helper: escape HTML to prevent XSS
+        function escapeHTML(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // Optional: Add device detection for mobile optimization
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        // Update upload hint for mobile
+        if (isMobile) {
+            const uploadSubtitle = document.querySelector('.upload-subtitle');
+            if (uploadSubtitle) {
+                uploadSubtitle.textContent = 'Maximum size 15 MB on mobile · tap to select';
+            }
         }
     </script>
 </body>
