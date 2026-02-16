@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Text Extractor</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Link to your external CSS file -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -14,8 +15,8 @@
             <div class="section-header">
                 <div class="icon">📄</div>
                 <h2>Document</h2>
-                <span class="pdf-badge">PDF</span>
             </div>
+            <span class="pdf-badge" style="position: absolute; top: 32px; right: 28px;">PDF</span>
 
             <div class="upload-zone" id="uploadZone">
                 <input type="file" id="pdfInput" accept=".pdf">
@@ -66,3 +67,17 @@
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
+```
+
+## What to do now:
+
+1. **Save this as `templates/index.html`** (replace your current one)
+2. **Make sure your folder structure is**:
+```
+   your-project/
+   ├── app.py
+   ├── templates/
+   │   └── index.html          ← New HTML above
+   └── static/
+       ├── style.css           ← Your CSS (document 5)
+       └── script.js           ← The JS I gave you earlier
