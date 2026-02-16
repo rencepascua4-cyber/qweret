@@ -29,7 +29,7 @@
         }
 
         /* LEFT PANEL - Document */
-        .content-panel {
+        .document-panel {
             background: white;
             border-radius: 12px;
             padding: 1.5rem;
@@ -38,8 +38,8 @@
             flex-direction: column;
         }
 
-        /* RIGHT PANEL - Document */
-        .document-panel {
+        /* RIGHT PANEL - Content */
+        .content-panel {
             background: white;
             border-radius: 12px;
             padding: 1.5rem;
@@ -280,6 +280,17 @@
             background: #9ca3af;
         }
 
+        /* Hide preview on mobile */
+        @media (max-width: 767px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .preview-section {
+                display: none;
+            }
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .app-container {
@@ -331,7 +342,7 @@
                     <span class="header-icon">📋</span>
                     <h2 class="header-title">Content</h2>
                 </div>
-                <span class="ready-badge">ready</span>
+                <span class="ready-badge" id="readyBadge">ready</span>
             </div>
 
             <div class="content-area" id="contentArea">
@@ -353,7 +364,7 @@
         const previewBox = document.getElementById('previewBox');
         const contentArea = document.getElementById('contentArea');
         const collapseBtn = document.getElementById('collapseBtn');
-        const readyBadge = document.querySelector('.ready-badge');
+        const readyBadge = document.getElementById('readyBadge');
 
         let currentPDF = null;
         let previewCollapsed = false;
@@ -566,7 +577,7 @@
                 .replace(/'/g, '&#039;');
         }
 
-        // Optional: Add device detection for mobile optimization
+        // Device detection for mobile optimization
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         
         // Update upload hint for mobile
