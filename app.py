@@ -1,134 +1,85 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 import PyPDF2
-import re
+import io
 import os
 
 app = Flask(__name__)
+# Enable CORS for all routes
+CORS(app, origins=['https://lawrencee.pythonanywhere.com', 'http://localhost:3000', 'http://127.0.0.1:3000'])
 
-def clean_text(text):
-    """Professional text cleaning pipeline for PDF extraction"""
-    if not text:
-        return ""
-    
-    # 1. Fix hyphenated line breaks
-    text = re.sub(r'(\w+)-\n(\w+)', r'\1\2', text)
-    text = re.sub(r'(\w+)-\s*\n\s*(\w+)', r'\1\2', text)
-    
-    # 2. Remove page numbers and headers/footers
-    lines = text.split('\n')
-    cleaned_lines = []
-    
-    for line in lines:
-        # Skip common page number patterns
-        if re.match(r'^\s*\d+\s*$', line):
-            continue
-        if re.match(r'^\s*Page \d+\s*$', line, re.IGNORECASE):
-            continue
-        if re.match(r'^\s*-\s*\d+\s*-\s*$', line):
-            continue
-            
-        # Skip very short lines that are likely artifacts
-        if len(line.strip()) < 3:
-            continue
-            
-        # Skip lines with only special characters
-        if re.match(r'^[\s\d\.,;:\-_\'"]+$', line.strip()):
-            continue
-            
-        cleaned_lines.append(line.rstrip())
-    
-    text = '\n'.join(cleaned_lines)
-    
-    # 3. Normalize whitespace
-    text = re.sub(r' +', ' ', text)
-    text = re.sub(r'\n\s*\n\s*\n+', '\n\n', text)
-    text = re.sub(r'[ \t]+$', '', text, flags=re.MULTILINE)
-    
-    # 4. Fix common PDF artifacts (ligatures)
-    text = re.sub(r'ﬁ', 'fi', text)
-    text = re.sub(r'ﬂ', 'fl', text)
-    text = re.sub(r'ﬀ', 'ff', text)
-    text = re.sub(r'ﬃ', 'ffi', text)
-    text = re.sub(r'ﬄ', 'ffl', text)
-    
-    # 5. Remove isolated bullets and markers
-    text = re.sub(r'^\s*[•·−–—―■□▪▫●○]\s*$', '', text, flags=re.MULTILINE)
-    
-    # 6. Fix spacing around punctuation
-    text = re.sub(r'\s+([.,;:!?)])', r'\1', text)
-    text = re.sub(r'([(])\s+', r'\1', text)
-    
-    # 7. Remove empty lines at start/end
-    text = text.strip()
-    
-    return text
-
-@app.route("/")
-def home():
-    """Render the main application page"""
-    return render_template("index.html")
-
-@app.route('/api/clean-pdf', methods=['POST'])
+@app.route('/api/clean-pdf', methods=['POST', 'OPTIONS'])
 def clean_pdf():
-    """Process and clean PDF text"""
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file provided'}), 400
-    
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No file selected'}), 400
-    
-    if not file.filename.lower().endswith('.pdf'):
-        return jsonify({'error': 'File must be a PDF'}), 400
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        return '', 200
     
     try:
-        print(f"Processing file: {file.filename}")
-        pdf_reader = PyPDF2.PdfReader(file)
-        pages_data = []
-        full_text = ''
+        # Check if file is present in request
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
         
+        file = request.files['file']
+        
+        # Check if file is empty
+        if file.filename == '':
+            return jsonify({'error': 'Empty file provided'}), 400
+        
+        # Check if it's a PDF
+        if not file.filename.lower().endswith('.pdf'):
+            return jsonify({'error': 'File must be a PDF'}), 400
+        
+        # Read PDF
+        pdf_bytes = file.read()
+        pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_bytes))
+        
+        # Extract text from all pages
+        text = ""
         for page_num, page in enumerate(pdf_reader.pages, 1):
             page_text = page.extract_text()
             if page_text:
-                cleaned_page = clean_text(page_text)
-                pages_data.append({
-                    'page': page_num,
-                    'text': cleaned_page
-                })
-                full_text += f'[Page {page_num}]\n{cleaned_page}\n\n'
+                text += page_text + "\n"
         
-        full_text = clean_text(full_text)
+        # Clean the text (remove extra spaces, normalize line breaks)
+        cleaned_text = ' '.join(text.split())
         
-        metadata = {
-            'pages': len(pdf_reader.pages),
-            'filename': file.filename,
-            'size': len(full_text)
+        # Get metadata
+        metadata = {}
+        if pdf_reader.metadata:
+            metadata = {
+                'title': pdf_reader.metadata.get('/Title', ''),
+                'author': pdf_reader.metadata.get('/Author', ''),
+                'pages': len(pdf_reader.pages)
+            }
+        else:
+            metadata = {
+                'pages': len(pdf_reader.pages)
+            }
+        
+        # Calculate stats
+        stats = {
+            'characters': len(cleaned_text),
+            'words': len(cleaned_text.split()),
+            'lines': len([line for line in text.split('\n') if line.strip()])
         }
         
-        if pdf_reader.metadata:
-            metadata['title'] = pdf_reader.metadata.get('/Title', '')
-            metadata['author'] = pdf_reader.metadata.get('/Author', '')
-        
-        if not full_text.strip():
-            return jsonify({
-                'error': 'No text could be extracted',
-                'suggestion': 'This PDF may be scanned or image-based'
-            }), 400
-            
         return jsonify({
-            'success': True,
-            'text': full_text,
-            'pages': pages_data,
+            'text': cleaned_text,
             'metadata': metadata,
-            'stats': {
-                'characters': len(full_text),
-                'words': len(full_text.split()),
-                'lines': len(full_text.split('\n'))
-            }
+            'stats': stats
         })
-    
+        
+    except PyPDF2.errors.PdfReadError:
+        return jsonify({'error': 'Invalid or corrupted PDF file'}), 400
     except Exception as e:
-        return jsonify({'error': f'Processing failed: {str(e)}'}), 500
+        print(f"Error processing PDF: {str(e)}")
+        return jsonify({'error': f'Error processing PDF: {str(e)}'}), 500
 
-if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({'status': 'PDF Text Extractor API is running'})
+
+if __name__ == '__main__':
+    # Get port from environment variable (for PythonAnywhere) or use 5000 for local
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
