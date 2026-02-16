@@ -619,18 +619,3 @@ body {
         border: 1px solid #ccc;
     }
 }
-/* Hide first page preview on mobile */
-@media (max-width: 767px) {
-    .preview-section {
-        display: none !important;
-    }
-    
-    /* Optional: Adjust spacing since preview is gone */
-    .document-panel {
-        padding-bottom: 1rem;
-    }
-    
-    .upload-zone {
-        margin-bottom: 0;
-    }
-}
