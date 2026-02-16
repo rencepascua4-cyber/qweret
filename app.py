@@ -5,15 +5,12 @@ import os
 
 app = Flask(__name__)
 
-
 def clean_text(text):
-    """
-    Professional text cleaning pipeline for PDF extraction
-    """
+    """Professional text cleaning pipeline for PDF extraction"""
     if not text:
         return ""
     
-    # 1. Fix hyphenated line breaks (word at end of line)
+    # 1. Fix hyphenated line breaks
     text = re.sub(r'(\w+)-\n(\w+)', r'\1\2', text)
     text = re.sub(r'(\w+)-\s*\n\s*(\w+)', r'\1\2', text)
     
@@ -43,9 +40,9 @@ def clean_text(text):
     text = '\n'.join(cleaned_lines)
     
     # 3. Normalize whitespace
-    text = re.sub(r' +', ' ', text)  # multiple spaces to single
-    text = re.sub(r'\n\s*\n\s*\n+', '\n\n', text)  # max 2 newlines
-    text = re.sub(r'[ \t]+$', '', text, flags=re.MULTILINE)  # trailing spaces
+    text = re.sub(r' +', ' ', text)
+    text = re.sub(r'\n\s*\n\s*\n+', '\n\n', text)
+    text = re.sub(r'[ \t]+$', '', text, flags=re.MULTILINE)
     
     # 4. Fix common PDF artifacts (ligatures)
     text = re.sub(r'ﬁ', 'fi', text)
@@ -86,7 +83,6 @@ def clean_pdf():
     
     try:
         print(f"Processing file: {file.filename}")
-        # Read PDF
         pdf_reader = PyPDF2.PdfReader(file)
         pages_data = []
         full_text = ''
@@ -94,7 +90,6 @@ def clean_pdf():
         for page_num, page in enumerate(pdf_reader.pages, 1):
             page_text = page.extract_text()
             if page_text:
-                # Clean each page individually
                 cleaned_page = clean_text(page_text)
                 pages_data.append({
                     'page': page_num,
@@ -102,17 +97,14 @@ def clean_pdf():
                 })
                 full_text += f'[Page {page_num}]\n{cleaned_page}\n\n'
         
-        # Apply global cleaning
         full_text = clean_text(full_text)
         
-        # Get metadata
         metadata = {
             'pages': len(pdf_reader.pages),
             'filename': file.filename,
             'size': len(full_text)
         }
         
-        # Try to get PDF info
         if pdf_reader.metadata:
             metadata['title'] = pdf_reader.metadata.get('/Title', '')
             metadata['author'] = pdf_reader.metadata.get('/Author', '')
@@ -122,7 +114,7 @@ def clean_pdf():
                 'error': 'No text could be extracted',
                 'suggestion': 'This PDF may be scanned or image-based'
             }), 400
-        print("Extracted Text: " + full_text)
+            
         return jsonify({
             'success': True,
             'text': full_text,
@@ -140,4 +132,3 @@ def clean_pdf():
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
-    
