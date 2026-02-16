@@ -5,588 +5,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Text Extractor</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #e5e7eb;
-            min-height: 100vh;
-            padding: 1.5rem;
-        }
-
-        .app-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 450px 1fr;
-            gap: 1.5rem;
-            min-height: calc(100vh - 3rem);
-        }
-
-        /* LEFT PANEL - Document */
-        .document-panel {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* RIGHT PANEL - Content */
-        .content-panel {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Panel Headers */
-        .panel-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.5rem;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .header-icon {
-            font-size: 1.5rem;
-        }
-
-        .header-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #1f2937;
-        }
-
-        .pdf-badge {
-            background: #1e3a8a;
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .ready-badge {
-            background: #dbeafe;
-            color: #1e3a8a;
-            padding: 0.4rem 1rem;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        /* Content Area */
-        .content-area {
-            background: #f9fafb;
-            border: 2px dashed #d1d5db;
-            border-radius: 8px;
-            flex: 1;
-            padding: 2rem;
-            overflow-y: auto;
-            max-height: calc(100vh - 12rem);
-        }
-
-        .content-placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            min-height: 400px;
-            color: #9ca3af;
-        }
-
-        .placeholder-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-        }
-
-        .placeholder-text {
-            font-size: 0.95rem;
-        }
-
-        .extracted-text {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            line-height: 1.7;
-            color: #1f2937;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-
-        /* Upload Zone */
-        .upload-zone {
-            background: #f9fafb;
-            border: 2px dashed #d1d5db;
-            border-radius: 8px;
-            padding: 3rem 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 1.5rem;
-        }
-
-        .upload-zone:hover {
-            background: #f3f4f6;
-            border-color: #9ca3af;
-        }
-
-        .upload-zone.dragover {
-            background: #dbeafe;
-            border-color: #3b82f6;
-        }
-
-        #fileInput {
-            display: none;
-        }
-
-        .upload-icon {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .upload-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 0.5rem;
-        }
-
-        .upload-subtitle {
-            font-size: 0.875rem;
-            color: #6b7280;
-        }
-
-        /* Preview Section */
-        .preview-section {
-            background: #f0f9ff;
-            border-radius: 8px;
-            padding: 1rem;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .preview-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .preview-title {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: #374151;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .collapse-btn {
-            background: transparent;
-            border: none;
-            color: #6b7280;
-            font-size: 1.25rem;
-            cursor: pointer;
-            padding: 0.25rem;
-            line-height: 1;
-        }
-
-        .collapse-btn:hover {
-            color: #1f2937;
-        }
-
-        .preview-box {
-            background: white;
-            border-radius: 6px;
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: auto;
-            padding: 1rem;
-            min-height: 300px;
-        }
-
-        .preview-placeholder {
-            color: #9ca3af;
-            font-size: 0.875rem;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        #pdfCanvas {
-            max-width: 100%;
-            height: auto;
-            border-radius: 4px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Loading */
-        .loading {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 4px solid #e5e7eb;
-            border-top: 4px solid #3b82f6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Scrollbar */
-        .content-area::-webkit-scrollbar,
-        .preview-box::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .content-area::-webkit-scrollbar-track,
-        .preview-box::-webkit-scrollbar-track {
-            background: #f3f4f6;
-            border-radius: 4px;
-        }
-
-        .content-area::-webkit-scrollbar-thumb,
-        .preview-box::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 4px;
-        }
-
-        .content-area::-webkit-scrollbar-thumb:hover,
-        .preview-box::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
-        }
-
-        /* Hide preview on mobile */
-        @media (max-width: 767px) {
-            .app-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .preview-section {
-                display: none;
-            }
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .app-container {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="app-container">
-        <!-- LEFT PANEL - DOCUMENT -->
-        <div class="document-panel">
-            <div class="panel-header">
-                <div class="header-left">
-                    <span class="header-icon">📄</span>
-                    <h2 class="header-title">Document</h2>
-                </div>
+    <div class="app">
+        <!-- LEFT PANEL -->
+        <div class="left-panel">
+            <div class="section-header">
+                <div class="icon">📄</div>
+                <h2>Document</h2>
                 <span class="pdf-badge">PDF</span>
             </div>
 
             <div class="upload-zone" id="uploadZone">
-                <input type="file" id="fileInput" accept=".pdf">
-                <div class="upload-icon">📘</div>
-                <div class="upload-title">Browse or drop PDF</div>
-                <div class="upload-subtitle">Maximum size 50 MB · secured client-side</div>
+                <input type="file" id="pdfInput" accept=".pdf">
+                <div class="upload-content">
+                    <div class="upload-icon-large">📘</div>
+                    <div class="upload-label">Browse or drop PDF</div>
+                    <div class="upload-hint">Maximum size 50 MB · secured client-side</div>
+                </div>
             </div>
 
-            <div class="preview-section">
+            <div id="fileMetaSection"></div>
+
+            <div class="preview-container">
                 <div class="preview-header">
-                    <div class="preview-title">
-                        <span>📄</span>
-                        <span>First page preview</span>
-                    </div>
-                    <button class="collapse-btn" id="collapseBtn">−</button>
+                    <span>📄 First page preview</span>
+                    <span class="metadata-badge" id="pageCountPreview">—</span>
                 </div>
-                <div class="preview-box" id="previewBox">
-                    <div class="preview-placeholder">
-                        <span>⚫</span>
-                        <span>No PDF loaded — upload to preview</span>
+                <div id="pdfPreviewArea">
+                    <div class="empty-preview-message" id="previewEmptyMsg">
+                        <span style="opacity: 0.8;">⏺ No PDF loaded — upload to preview</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- RIGHT PANEL - CONTENT -->
-        <div class="content-panel">
-            <div class="panel-header">
-                <div class="header-left">
-                    <span class="header-icon">📋</span>
-                    <h2 class="header-title">Content</h2>
+        <!-- RIGHT PANEL -->
+        <div class="right-panel">
+            <div class="right-header">
+                <div class="title-group">
+                    <div class="icon">📋</div>
+                    <h2>Content</h2>
                 </div>
-                <span class="ready-badge" id="readyBadge">ready</span>
+                <span class="page-pill" id="pageCountBadge">ready</span>
             </div>
 
-            <div class="content-area" id="contentArea">
-                <div class="content-placeholder">
-                    <div class="placeholder-icon">📄</div>
-                    <div class="placeholder-text">— Upload a PDF to extract & display text</div>
+            <div class="text-content-panel" id="textDisplayArea">
+                <div class="placeholder-text">
+                    <span>⬅ Upload a PDF to extract & display text</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- PDF.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-        const uploadZone = document.getElementById('uploadZone');
-        const fileInput = document.getElementById('fileInput');
-        const previewBox = document.getElementById('previewBox');
-        const contentArea = document.getElementById('contentArea');
-        const collapseBtn = document.getElementById('collapseBtn');
-        const readyBadge = document.getElementById('readyBadge');
-
-        let currentPDF = null;
-        let previewCollapsed = false;
-
-        // API endpoint - update this to match your Flask server URL
-        const API_ENDPOINT = 'http://localhost:5000/api/clean-pdf';
-
-        // Upload interactions
-        uploadZone.addEventListener('click', () => fileInput.click());
-
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file && file.type === 'application/pdf') {
-                handlePDF(file);
-            }
-        });
-
-        uploadZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadZone.classList.add('dragover');
-        });
-
-        uploadZone.addEventListener('dragleave', () => {
-            uploadZone.classList.remove('dragover');
-        });
-
-        uploadZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadZone.classList.remove('dragover');
-            const file = e.dataTransfer.files[0];
-            if (file && file.type === 'application/pdf') {
-                handlePDF(file);
-            } else {
-                alert('Please upload a PDF file');
-            }
-        });
-
-        // Collapse button
-        collapseBtn.addEventListener('click', () => {
-            previewCollapsed = !previewCollapsed;
-            if (previewCollapsed) {
-                previewBox.style.display = 'none';
-                collapseBtn.textContent = '+';
-            } else {
-                previewBox.style.display = 'flex';
-                collapseBtn.textContent = '−';
-            }
-        });
-
-        async function handlePDF(file) {
-            try {
-                // File size validation (50MB max)
-                if (file.size > 50 * 1024 * 1024) {
-                    alert('File size exceeds 50MB');
-                    return;
-                }
-
-                // Show loading states
-                readyBadge.textContent = 'processing...';
-                readyBadge.style.background = '#fef3c7';
-                readyBadge.style.color = '#92400e';
-                
-                previewBox.innerHTML = '<div class="loading"></div>';
-                contentArea.innerHTML = '<div style="text-align: center; padding: 3rem;"><div class="loading"></div><p style="margin-top: 1rem; color: #6b7280;">Processing PDF...</p></div>';
-
-                // Load PDF for preview (client-side)
-                const arrayBuffer = await file.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-                currentPDF = pdf;
-
-                // Render preview (client-side)
-                await renderPreview(pdf);
-
-                // Extract text via Flask API (server-side with cleaning)
-                await extractTextViaAPI(file);
-
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error processing PDF');
-                readyBadge.textContent = 'error';
-                readyBadge.style.background = '#fee2e2';
-                readyBadge.style.color = '#991b1b';
-            }
-        }
-
-        async function renderPreview(pdf) {
-            try {
-                const page = await pdf.getPage(1);
-                const viewport = page.getViewport({ scale: 1.5 });
-
-                const canvas = document.createElement('canvas');
-                canvas.id = 'pdfCanvas';
-                const context = canvas.getContext('2d');
-
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
-
-                await page.render({
-                    canvasContext: context,
-                    viewport: viewport
-                }).promise;
-
-                previewBox.innerHTML = '';
-                previewBox.appendChild(canvas);
-
-            } catch (error) {
-                console.error('Preview error:', error);
-                previewBox.innerHTML = '<div class="preview-placeholder"><span>❌</span><span>Error rendering preview</span></div>';
-            }
-        }
-
-        // Extract text via Flask API
-        async function extractTextViaAPI(file) {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-                const response = await fetch(API_ENDPOINT, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to extract text');
-                }
-
-                // Display the cleaned text from Flask
-                displayExtractedText(data);
-                
-                // Update badge with page count
-                if (data.metadata?.pages) {
-                    readyBadge.textContent = `${data.metadata.pages} page${data.metadata.pages > 1 ? 's' : ''}`;
-                    readyBadge.style.background = '#dbeafe';
-                    readyBadge.style.color = '#1e3a8a';
-                }
-
-            } catch (error) {
-                console.error('API error:', error);
-                contentArea.innerHTML = `
-                    <div class="content-placeholder">
-                        <div class="placeholder-icon">❌</div>
-                        <div class="placeholder-text">Error: ${error.message}</div>
-                    </div>
-                `;
-                readyBadge.textContent = 'error';
-                readyBadge.style.background = '#fee2e2';
-                readyBadge.style.color = '#991b1b';
-            }
-        }
-
-        // Display extracted text with formatting
-        function displayExtractedText(data) {
-            const text = data.text || 'No text extracted';
-            
-            // Create stats section
-            const statsHTML = data.stats ? `
-                <div style="
-                    background: #f3f4f6;
-                    padding: 0.75rem 1rem;
-                    border-radius: 6px;
-                    margin-bottom: 1.5rem;
-                    font-size: 0.85rem;
-                    color: #4b5563;
-                    display: flex;
-                    gap: 1.5rem;
-                    flex-wrap: wrap;
-                ">
-                    <span>📊 Characters: ${data.stats.characters?.toLocaleString() || '—'}</span>
-                    <span>📝 Words: ${data.stats.words?.toLocaleString() || '—'}</span>
-                    <span>📏 Lines: ${data.stats.lines?.toLocaleString() || '—'}</span>
-                </div>
-            ` : '';
-
-            // Create metadata section if available
-            const metadataHTML = data.metadata?.title ? `
-                <div style="
-                    background: #f0f9ff;
-                    padding: 0.75rem 1rem;
-                    border-radius: 6px;
-                    margin-bottom: 1.5rem;
-                    font-size: 0.85rem;
-                    color: #0369a1;
-                ">
-                    ${data.metadata.title ? `<div>📌 Title: ${escapeHTML(data.metadata.title)}</div>` : ''}
-                    ${data.metadata.author ? `<div>✍️ Author: ${escapeHTML(data.metadata.author)}</div>` : ''}
-                </div>
-            ` : '';
-
-            // Combine everything
-            const fullHTML = `
-                ${statsHTML}
-                ${metadataHTML}
-                <div class="extracted-text">${escapeHTML(text)}</div>
-            `;
-
-            contentArea.innerHTML = fullHTML;
-            contentArea.scrollTop = 0;
-        }
-
-        // Helper: escape HTML to prevent XSS
-        function escapeHTML(unsafe) {
-            if (!unsafe) return '';
-            return unsafe
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        }
-
-        // Device detection for mobile optimization
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        
-        // Update upload hint for mobile
-        if (isMobile) {
-            const uploadSubtitle = document.querySelector('.upload-subtitle');
-            if (uploadSubtitle) {
-                uploadSubtitle.textContent = 'Maximum size 15 MB on mobile · tap to select';
-            }
-        }
-    </script>
+    <!-- PDF.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    
+    <!-- Your JavaScript -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
