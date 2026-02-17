@@ -1,272 +1,347 @@
-// Configure pdf.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-// DOM refs
 const pdfInput = document.getElementById('pdfInput');
 const uploadZone = document.getElementById('uploadZone');
 const fileMetaSection = document.getElementById('fileMetaSection');
 const pdfPreviewArea = document.getElementById('pdfPreviewArea');
-const previewEmptyMsg = document.getElementById('previewEmptyMsg');
 const textDisplayArea = document.getElementById('textDisplayArea');
 const pageCountBadge = document.getElementById('pageCountBadge');
-const pageCountPreview = document.getElementById('pageCountPreview');
+const fileTabsContainer = document.getElementById('fileTabsContainer');
+const fileTabs = document.getElementById('fileTabs');
+const contentTabsContainer = document.getElementById('contentTabsContainer');
+const contentTabs = document.getElementById('contentTabs');
+const clearAllBtn = document.getElementById('clearAllBtn');
 
-// API endpoint
 const API_ENDPOINT = '/api/clean-pdf';
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
-// Device detection
-const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-const isTablet = /(iPad|Android(?!.*mobile))/i.test(navigator.userAgent);
+let pdfFiles = [];
+let activePdfIndex = -1;
+let extractedTexts = {};
 
-// File size limits based on device
-const MAX_FILE_SIZE = isMobile ? 15 * 1024 * 1024 : 50 * 1024 * 1024; // 15MB mobile, 50MB desktop
-
-// Helper: sanitize HTML
-const escapeHTML = (unsafe) => {
-    if (!unsafe) return '';
-    return unsafe.replace(/[&<>"]/g, (m) => {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        if (m === '"') return '&quot;';
-        return m;
-    });
-};
-
-// Helper: format file size
-const formatFileSize = (bytes) => {
+function formatFileSize(bytes) {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / 1048576).toFixed(1) + ' MB';
-};
+}
 
-// Reset UI to empty state
-const resetToEmpty = () => {
-    fileMetaSection.innerHTML = '';
-    pdfPreviewArea.innerHTML = `<div class="empty-preview-message" id="previewEmptyMsg"><span style="opacity: 0.8;">⏺ No PDF loaded — upload to preview</span></div>`;
-    textDisplayArea.innerHTML = `<div class="placeholder-text"><span>⬅ Upload a PDF to extract & display text</span></div>`;
-    pageCountBadge.innerText = 'ready';
-    pageCountPreview.innerText = '—';
-};
+function escapeHTML(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
 
-// Render PDF preview using pdf.js (client-side) - OPTIMIZED FOR ALL DEVICES
-const renderPdfPreview = async (file) => {
-    try {
-        // Show loading state
-        pdfPreviewArea.innerHTML = `<div class="empty-preview-message"><span>🔄 Rendering preview...</span></div>`;
+// SIMPLE file tabs update
+function updateFileTabs() {
+    if (pdfFiles.length === 0) {
+        fileTabsContainer.style.display = 'none';
+        contentTabsContainer.style.display = 'none';
+        return;
+    }
+    
+    fileTabsContainer.style.display = 'block';
+    fileTabs.innerHTML = ''; // Clear
+    
+    for (let i = 0; i < pdfFiles.length; i++) {
+        const file = pdfFiles[i];
         
-        const arrayBuffer = await file.arrayBuffer();
-        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-        const pdf = await loadingTask.promise;
-        const totalPages = pdf.numPages;
-
-        // Update page indicators
-        pageCountBadge.innerText = `${totalPages} page${totalPages > 1 ? 's' : ''}`;
-        pageCountPreview.innerText = `${totalPages} page${totalPages > 1 ? 's' : ''}`;
-
-        // Render first page with device-optimized scale
-        const firstPage = await pdf.getPage(1);
-        
-        // Adaptive scaling based on device and screen size
-        let scale;
-        if (isMobile) {
-            scale = window.innerWidth < 400 ? 0.6 : 0.8; // Small phones vs larger phones
-        } else if (isTablet) {
-            scale = 1.2;
-        } else {
-            scale = 1.65; // Desktop
+        // Create tab div
+        const tab = document.createElement('div');
+        tab.className = 'file-tab';
+        if (i === activePdfIndex) {
+            tab.className += ' active';
         }
+        tab.setAttribute('data-index', i);
         
-        const viewport = firstPage.getViewport({ scale: scale });
+        // Add content
+        const icon = document.createElement('span');
+        icon.className = 'tab-icon';
+        icon.textContent = '📄';
+        
+        const name = document.createElement('span');
+        name.className = 'tab-name';
+        let displayName = file.name;
+        if (displayName.length > 15) {
+            displayName = displayName.substring(0, 12) + '…';
+        }
+        name.textContent = displayName;
+        
+        const size = document.createElement('span');
+        size.className = 'tab-size';
+        size.textContent = formatFileSize(file.size);
+        
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'tab-close';
+        closeBtn.textContent = '✕';
+        closeBtn.onclick = function(e) {
+            e.stopPropagation();
+            removePdf(i);
+        };
+        
+        tab.appendChild(icon);
+        tab.appendChild(name);
+        tab.appendChild(size);
+        tab.appendChild(closeBtn);
+        
+        tab.onclick = function() {
+            const idx = parseInt(this.getAttribute('data-index'));
+            switchToPdf(idx);
+        };
+        
+        fileTabs.appendChild(tab);
+    }
+}
+
+// SIMPLE content tabs update
+function updateContentTabs() {
+    if (pdfFiles.length === 0) {
+        contentTabsContainer.style.display = 'none';
+        return;
+    }
+    
+    contentTabsContainer.style.display = 'block';
+    contentTabs.innerHTML = ''; // Clear
+    
+    for (let i = 0; i < pdfFiles.length; i++) {
+        const file = pdfFiles[i];
+        
+        // Create tab div
+        const tab = document.createElement('div');
+        tab.className = 'content-tab';
+        if (i === activePdfIndex) {
+            tab.className += ' active';
+        }
+        tab.setAttribute('data-index', i);
+        
+        // Status icon
+        const hasContent = extractedTexts[i] && extractedTexts[i].success;
+        const statusIcon = document.createElement('span');
+        statusIcon.className = 'tab-icon';
+        statusIcon.textContent = hasContent ? '✅' : '⏳';
+        
+        // Name
+        const name = document.createElement('span');
+        name.className = 'tab-name';
+        let displayName = file.name;
+        if (displayName.length > 12) {
+            displayName = displayName.substring(0, 10) + '…';
+        }
+        name.textContent = displayName;
+        
+        tab.appendChild(statusIcon);
+        tab.appendChild(name);
+        
+        tab.onclick = function() {
+            const idx = parseInt(this.getAttribute('data-index'));
+            switchToPdf(idx);
+        };
+        
+        contentTabs.appendChild(tab);
+    }
+}
+
+async function switchToPdf(index) {
+    if (index === activePdfIndex || index < 0 || index >= pdfFiles.length) return;
+    
+    activePdfIndex = index;
+    const file = pdfFiles[index];
+    
+    updateFileTabs();
+    updateContentTabs();
+    
+    fileMetaSection.innerHTML = '<div class="file-metadata">' +
+        '<span style="font-size: 1.4rem;">📌</span>' +
+        '<span style="font-weight: 600;">' + escapeHTML(file.name) + '</span>' +
+        '<span>' + formatFileSize(file.size) + '</span>' +
+        '</div>';
+    
+    pageCountBadge.innerText = 'loading…';
+    pdfPreviewArea.innerHTML = '<div class="empty-preview-message"><span>🔄 Rendering preview...</span></div>';
+    
+    await renderPdfPreview(file);
+    
+    if (extractedTexts[index]) {
+        displayExtractedText(index);
+    } else {
+        await extractTextViaAPI(file, index);
+    }
+}
+
+function displayExtractedText(index) {
+    const data = extractedTexts[index];
+    if (!data) {
+        textDisplayArea.innerHTML = '<div class="placeholder-text"><span>⏳ Processing...</span></div>';
+        return;
+    }
+    
+    if (data.success) {
+        textDisplayArea.innerHTML = '<div style="white-space: pre-wrap; padding: 10px;">' + 
+            escapeHTML(data.text || 'No text extracted') + '</div>';
+        if (data.metadata && data.metadata.pages) {
+            pageCountBadge.innerText = data.metadata.pages + ' page' + (data.metadata.pages > 1 ? 's' : '');
+        } else {
+            pageCountBadge.innerText = 'ready';
+        }
+    } else {
+        textDisplayArea.innerHTML = '<div class="placeholder-text" style="color: #b34a4a;">' +
+            '❌ Error: ' + escapeHTML(data.error || 'Unknown error') + '</div>';
+        pageCountBadge.innerText = 'error';
+    }
+    updateContentTabs();
+}
+
+async function renderPdfPreview(file) {
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const page = await pdf.getPage(1);
+        
+        const viewport = page.getViewport({ scale: 1.2 });
         const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d', { alpha: false }); // Better performance
+        canvas.className = 'pdf-page-canvas';
         canvas.width = viewport.width;
         canvas.height = viewport.height;
-        canvas.className = 'pdf-page-canvas';
-        canvas.setAttribute('aria-label', 'PDF first page preview');
-
-        const renderContext = {
-            canvasContext: context,
+        
+        await page.render({
+            canvasContext: canvas.getContext('2d'),
             viewport: viewport
-        };
-
-        await firstPage.render(renderContext).promise;
+        }).promise;
+        
         pdfPreviewArea.innerHTML = '';
         pdfPreviewArea.appendChild(canvas);
-        
-        return { success: true, totalPages };
     } catch (error) {
-        console.error('Preview rendering error:', error);
-        const errorMsg = isMobile 
-            ? '⚠️ Preview failed — file may be too large for mobile' 
-            : '⚠️ Could not render preview — corrupted or encrypted file';
-        pdfPreviewArea.innerHTML = `<div class="empty-preview-message" style="color: #b33a3a; border-color: #f3d7d7;">${errorMsg}</div>`;
-        return { success: false, error };
+        pdfPreviewArea.innerHTML = '<div class="empty-preview-message" style="color: #b33a3a;">' +
+            '⚠️ Preview failed</div>';
     }
-};
+}
 
-// Send PDF to Flask endpoint for text extraction
-const extractTextViaAPI = async (file) => {
+async function extractTextViaAPI(file, index) {
     const formData = new FormData();
     formData.append('file', file);
-
+    
     try {
-        const response = await fetch(API_ENDPOINT, {
-            method: 'POST',
-            body: formData
-        });
-
+        if (index === activePdfIndex) {
+            textDisplayArea.innerHTML = '<div class="placeholder-text"><span>⏳ Extracting text...</span></div>';
+        }
+        
+        const response = await fetch(API_ENDPOINT, { method: 'POST', body: formData });
         const data = await response.json();
-
+        
         if (!response.ok) {
-            throw new Error(data.error || 'Failed to extract text');
+            throw new Error(data.error || 'Failed');
         }
-
-        return { success: true, data };
+        
+        extractedTexts[index] = { success: true, text: data.text, metadata: data.metadata };
+        
+        if (index === activePdfIndex) {
+            displayExtractedText(index);
+        } else {
+            updateContentTabs();
+        }
     } catch (error) {
-        console.error('API error:', error);
-        return { success: false, error: error.message };
-    }
-};
-
-// Main PDF processing function - ENHANCED WITH VALIDATION
-const processPdf = async (file) => {
-    // Basic validation
-    if (!file || file.type !== 'application/pdf') {
-        alert('Please select a valid PDF document.');
-        pdfInput.value = '';
-        resetToEmpty();
-        return;
-    }
-
-    // File size validation (device-specific limits)
-    if (file.size > MAX_FILE_SIZE) {
-        const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
-        alert(`File too large! Maximum size is ${maxSizeMB}MB${isMobile ? ' on mobile devices' : ''}.\n\nYour file: ${formatFileSize(file.size)}`);
-        pdfInput.value = '';
-        resetToEmpty();
-        return;
-    }
-
-    // Update file metadata
-    fileMetaSection.innerHTML = `
-        <div class="file-metadata">
-            <span style="font-size: 1.4rem; margin-right: 4px;">📌</span>
-            <span style="font-weight: 600;">${escapeHTML(file.name)}</span>
-            <span style="color: #3f657d;">${formatFileSize(file.size)}</span>
-        </div>
-    `;
-
-    // Set loading state
-    pageCountBadge.innerText = 'loading…';
-    pageCountPreview.innerText = 'loading';
-    textDisplayArea.innerHTML = `<div class="placeholder-text"><span>⏳ Extracting text via API...</span></div>`;
-
-    // Render preview (client-side)
-    await renderPdfPreview(file);
-
-    // Extract text via API (server-side with PyPDF2 + cleaning)
-    const result = await extractTextViaAPI(file);
-
-    if (result.success) {
-        // Display the cleaned text from Flask
-        textDisplayArea.innerHTML = '';
-        const textContainer = document.createElement('div');
-        textContainer.style.whiteSpace = 'pre-wrap';
-        textContainer.style.wordBreak = 'break-word';
-        textContainer.style.fontSize = isMobile ? '0.9rem' : '0.98rem';
-        textContainer.style.lineHeight = '1.7';
-        
-        // Use the cleaned text from your Flask endpoint
-        textContainer.textContent = result.data.text || '[No text extracted]';
-        textDisplayArea.appendChild(textContainer);
-        
-        // Update page count if available from API
-        if (result.data.metadata?.pages) {
-            pageCountBadge.innerText = `${result.data.metadata.pages} page${result.data.metadata.pages > 1 ? 's' : ''}`;
-            pageCountPreview.innerText = `${result.data.metadata.pages} page${result.data.metadata.pages > 1 ? 's' : ''}`;
+        extractedTexts[index] = { success: false, error: error.message };
+        if (index === activePdfIndex) {
+            displayExtractedText(index);
+        } else {
+            updateContentTabs();
         }
-    } else {
-        // Show error message
-        textDisplayArea.innerHTML = `<div class="placeholder-text" style="color: #b34a4a;">
-            ❌ Failed to extract text: ${escapeHTML(result.error || 'Unknown error')}
-        </div>`;
-        pageCountBadge.innerText = 'error';
-        pageCountPreview.innerText = 'error';
     }
-};
+}
 
-// ----- Event Listeners -----
-pdfInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        processPdf(file);
-    } else {
-        resetToEmpty();
+function removePdf(index) {
+    if (index < 0 || index >= pdfFiles.length) return;
+    
+    pdfFiles.splice(index, 1);
+    
+    // Rebuild extractedTexts
+    const newExtracted = {};
+    for (let i = 0; i < pdfFiles.length; i++) {
+        if (extractedTexts[i + (i >= index ? 1 : 0)]) {
+            newExtracted[i] = extractedTexts[i + (i >= index ? 1 : 0)];
+        }
     }
+    extractedTexts = newExtracted;
+    
+    if (pdfFiles.length === 0) {
+        activePdfIndex = -1;
+        fileTabsContainer.style.display = 'none';
+        contentTabsContainer.style.display = 'none';
+        fileMetaSection.innerHTML = '';
+        pdfPreviewArea.innerHTML = '<div class="empty-preview-message"><span>⏺ No PDF loaded — upload to preview</span></div>';
+        textDisplayArea.innerHTML = '<div class="placeholder-text"><span>⬅ Upload a PDF to extract and display text</span></div>';
+        pageCountBadge.innerText = 'ready';
+    } else {
+        if (activePdfIndex >= pdfFiles.length) {
+            activePdfIndex = pdfFiles.length - 1;
+        } else if (activePdfIndex > index) {
+            activePdfIndex--;
+        }
+        updateFileTabs();
+        updateContentTabs();
+        switchToPdf(activePdfIndex);
+    }
+}
+
+// Event Listeners
+clearAllBtn.addEventListener('click', function() {
+    pdfFiles = [];
+    extractedTexts = {};
+    activePdfIndex = -1;
+    fileTabsContainer.style.display = 'none';
+    contentTabsContainer.style.display = 'none';
+    fileMetaSection.innerHTML = '';
+    pdfPreviewArea.innerHTML = '<div class="empty-preview-message"><span>⏺ No PDF loaded — upload to preview</span></div>';
+    textDisplayArea.innerHTML = '<div class="placeholder-text"><span>⬅ Upload a PDF to extract and display text</span></div>';
+    pageCountBadge.innerText = 'ready';
+    pdfInput.value = '';
 });
 
-// Drag and drop (works on desktop, gracefully degrades on mobile)
-uploadZone.addEventListener('dragover', (e) => {
+pdfInput.addEventListener('change', function(e) {
+    const files = Array.from(e.target.files).filter(f => f.type === 'application/pdf');
+    if (files.length === 0) return;
+    
+    pdfFiles = pdfFiles.concat(files);
+    
+    if (activePdfIndex === -1) {
+        activePdfIndex = 0;
+    }
+    
+    updateFileTabs();
+    updateContentTabs();
+    switchToPdf(activePdfIndex);
+});
+
+uploadZone.addEventListener('click', function() {
+    pdfInput.click();
+});
+
+uploadZone.addEventListener('dragover', function(e) {
     e.preventDefault();
     uploadZone.style.background = '#f2f8ff';
-    uploadZone.style.borderColor = '#0a2a44';
 });
 
-uploadZone.addEventListener('dragleave', (e) => {
+uploadZone.addEventListener('dragleave', function() {
+    uploadZone.style.background = '#f9fcff';
+});
+
+uploadZone.addEventListener('drop', function(e) {
     e.preventDefault();
     uploadZone.style.background = '#f9fcff';
-    uploadZone.style.borderColor = '#b8ccda';
-});
-
-uploadZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadZone.style.background = '#f9fcff';
-    uploadZone.style.borderColor = '#b8ccda';
-
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-        const file = files[0];
-        if (file.type === 'application/pdf') {
-            pdfInput.files = files;
-            processPdf(file);
-        } else {
-            alert('Only PDF files are supported.');
-        }
-    }
-});
-
-// Click to upload (works on all devices)
-uploadZone.addEventListener('click', (e) => {
-    if (e.target.tagName !== 'INPUT') {
-        pdfInput.click();
-    }
-});
-
-pdfInput.addEventListener('click', (e) => {
-    e.stopPropagation();
-});
-
-// Initialize on load
-window.addEventListener('load', () => {
-    resetToEmpty();
     
-    // Update hint text for mobile
-    if (isMobile) {
-        const hintElement = document.querySelector('.upload-hint');
-        if (hintElement) {
-            hintElement.textContent = `Maximum size ${(MAX_FILE_SIZE / (1024 * 1024)).toFixed(0)} MB · tap to select`;
-        }
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf');
+    if (files.length === 0) return;
+    
+    pdfFiles = pdfFiles.concat(files);
+    
+    if (activePdfIndex === -1) {
+        activePdfIndex = 0;
     }
-});
-
-// Handle orientation changes on mobile
-window.addEventListener('orientationchange', () => {
-    setTimeout(() => {
-        // Re-render preview if exists after orientation change
-        const canvas = pdfPreviewArea.querySelector('.pdf-page-canvas');
-        if (canvas && pdfInput.files.length > 0) {
-            renderPdfPreview(pdfInput.files[0]);
-        }
-    }, 300);
+    
+    updateFileTabs();
+    updateContentTabs();
+    switchToPdf(activePdfIndex);
 });

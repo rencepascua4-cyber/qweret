@@ -1,4 +1,3 @@
-/* modern reset – professional grade */
 * {
     margin: 0;
     padding: 0;
@@ -7,7 +6,7 @@
 
 body {
     background-color: #f0f3f7;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Inter', sans-serif;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -15,6 +14,10 @@ body {
     padding: 24px;
     color: #1a2c3e;
     line-height: 1.5;
+}
+
+#pdfInput {
+    display: none !important;
 }
 
 .app {
@@ -26,10 +29,8 @@ body {
     border-radius: 32px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
     overflow: hidden;
-    transition: box-shadow 0.2s ease;
 }
 
-/* LEFT PANEL – PDF UPLOAD & PREVIEW */
 .left-panel {
     flex: 1 1 50%;
     background-color: #ffffff;
@@ -45,7 +46,6 @@ body {
     align-items: center;
     gap: 12px;
     margin-bottom: 28px;
-    user-select: none;
 }
 
 .section-header .icon {
@@ -68,31 +68,24 @@ body {
     color: #0a2a44;
 }
 
-/* upload zone */
 .upload-zone {
     background: #f9fcff;
     border: 1.5px dashed #b8ccda;
     border-radius: 24px;
     padding: 36px 24px;
     text-align: center;
-    transition: all 0.18s cubic-bezier(0.2, 0, 0, 1);
+    transition: all 0.18s;
     cursor: pointer;
     margin-bottom: 28px;
-    -webkit-tap-highlight-color: transparent;
 }
 
 .upload-zone:hover {
     border-color: #0a2a44;
     background: #f2f8ff;
-    border-width: 1.5px;
 }
 
 .upload-zone:active {
     transform: scale(0.99);
-}
-
-.upload-zone input {
-    display: none;
 }
 
 .upload-content {
@@ -121,7 +114,6 @@ body {
     letter-spacing: 0.01em;
 }
 
-/* file metadata */
 .file-metadata {
     display: flex;
     align-items: center;
@@ -137,7 +129,6 @@ body {
     flex-wrap: wrap;
 }
 
-/* preview panel */
 .preview-container {
     background: #f6fafd;
     border-radius: 20px;
@@ -166,23 +157,6 @@ body {
     gap: 8px;
 }
 
-.preview-thumbnail {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-}
-
-.pdf-page-canvas {
-    max-width: 100%;
-    height: auto;
-    border-radius: 16px;
-    box-shadow: 0 8px 20px rgba(0,20,40,0.08);
-    border: 1px solid white;
-    background: white;
-}
-
 .empty-preview-message {
     display: flex;
     align-items: center;
@@ -197,7 +171,15 @@ body {
     text-align: center;
 }
 
-/* RIGHT PANEL */
+.pdf-page-canvas {
+    max-width: 100%;
+    height: auto;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0,20,40,0.08);
+    border: 1px solid white;
+    background: white;
+}
+
 .right-panel {
     flex: 1 1 50%;
     background: #ffffff;
@@ -252,7 +234,6 @@ body {
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 
-/* text output */
 .text-content-panel {
     flex: 1;
     background: #fafdff;
@@ -266,7 +247,7 @@ body {
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.6), inset 0 2px 6px rgba(0,0,0,0.01);
     white-space: pre-wrap;
     word-wrap: break-word;
-    font-family: 'Inter', 'SF Mono', 'Menlo', 'Consolas', monospace;
+    font-family: 'Inter', monospace;
     scroll-behavior: smooth;
 }
 
@@ -287,36 +268,171 @@ body {
     border: 1px dashed #c7d9e5;
 }
 
-/* badges and utilities */
-.metadata-badge {
-    background: white;
-    border-radius: 30px;
-    padding: 4px 16px;
-    font-size: 0.8rem;
-    border: 0.5px solid #c6d6e1;
-    color: #1f4868;
+/* ===== FILE TABS STYLING ===== */
+.file-tabs-container {
+    margin-bottom: 20px;
+    width: 100%;
 }
 
-.file-metadata span {
+.file-tabs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 0 5px;
+}
+
+.tabs-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #2e506a;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.clear-all-btn {
+    background: transparent;
+    border: 1px solid #d0dee8;
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    color: #4f6f8a;
+    cursor: pointer;
+}
+
+.clear-all-btn:hover {
+    background: #e7edf3;
+    color: #0a2a44;
+}
+
+.file-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.file-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f0f6fa;
+    border: 1px solid #d9e2ea;
+    border-radius: 30px;
+    padding: 6px 12px 6px 10px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.file-tab:hover {
+    background: #e3ecf3;
+}
+
+.file-tab.active {
+    background: #0a2a44;
+    border-color: #0a2a44;
+    color: white;
+}
+
+.file-tab.active .tab-close {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.file-tab.active .tab-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.tab-icon {
+    font-size: 1rem;
+}
+
+.tab-name {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tab-size {
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+.tab-close {
+    background: transparent;
+    border: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #6b859c;
+    font-size: 0.8rem;
+    margin-left: 2px;
+    padding: 0;
+}
+
+.tab-close:hover {
+    background: #e2eaf1;
+    color: #b33a3a;
+}
+
+/* ===== CONTENT TABS STYLING ===== */
+.content-tabs-container {
+    margin-bottom: 16px;
+    width: 100%;
+}
+
+.content-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 1px solid #e2ebf0;
+    padding-bottom: 8px;
+}
+
+.content-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 30px 30px 0 0;
+    font-size: 0.85rem;
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid transparent;
+    border-bottom: none;
+    transition: all 0.2s;
+}
+
+.content-tab:hover {
+    background: #f0f6fa;
+}
+
+.content-tab.active {
+    background: #f6fafd;
+    border-color: #e2ebf0;
+    border-bottom-color: #f6fafd;
+    margin-bottom: -1px;
+    color: #0a2a44;
     font-weight: 500;
 }
 
-.pdf-badge {
-    background: #0a2a44;
-    color: white;
-    border-radius: 18px;
-    padding: 4px 14px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
+.content-tab .tab-icon {
+    font-size: 0.9rem;
 }
 
-.hidden {
-    display: none;
+.content-tab .tab-name {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-/* scrollbar refinement */
+/* ===== SCROLLBAR STYLING ===== */
 .preview-container::-webkit-scrollbar,
 .text-content-panel::-webkit-scrollbar {
     width: 6px;
@@ -335,285 +451,205 @@ body {
     border-radius: 10px;
 }
 
-/* ============================================ */
-/* RESPONSIVE DESIGN - TABLET (768px - 1024px) */
-/* ============================================ */
+/* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 1024px) {
     body {
         padding: 16px;
     }
-
     .app {
         border-radius: 24px;
         height: auto;
         min-height: 90vh;
     }
-
-    .left-panel,
-    .right-panel {
+    .left-panel, .right-panel {
         padding: 24px 20px;
     }
-
-    .section-header h2,
-    .title-group h2 {
+    .section-header h2, .title-group h2 {
         font-size: 1.5rem;
     }
-
     .upload-zone {
         padding: 28px 20px;
     }
 }
 
-/* ============================================ */
-/* RESPONSIVE DESIGN - MOBILE (max 767px)      */
-/* ============================================ */
 @media (max-width: 767px) {
     body {
         padding: 12px;
         align-items: flex-start;
     }
-
     .app {
         flex-direction: column;
         height: auto;
         min-height: calc(100vh - 24px);
         border-radius: 20px;
-        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.2);
     }
-
     .left-panel {
         border-right: none;
         border-bottom: 1px solid #e6edf2;
         padding: 20px 16px;
         flex: 0 0 auto;
     }
-
     .right-panel {
         padding: 20px 16px;
         flex: 1;
         min-height: 400px;
     }
-
     .section-header {
         margin-bottom: 20px;
         gap: 10px;
     }
-
-    .section-header .icon,
-    .title-group .icon {
+    .section-header .icon, .title-group .icon {
         width: 38px;
         height: 38px;
         font-size: 20px;
         border-radius: 12px;
     }
-
-    .section-header h2,
-    .title-group h2 {
+    .section-header h2, .title-group h2 {
         font-size: 1.35rem;
     }
-
-    .pdf-badge {
-        font-size: 0.7rem;
-        padding: 3px 10px;
-    }
-
     .upload-zone {
         padding: 24px 16px;
         border-radius: 18px;
         margin-bottom: 20px;
     }
-
     .upload-icon-large {
         font-size: 40px;
     }
-
     .upload-label {
         font-size: 1.05rem;
     }
-
     .upload-hint {
         font-size: 0.8rem;
     }
-
     .file-metadata {
         font-size: 0.85rem;
-        padding: 8px 14px 8px 12px;
+        padding: 8px 14px;
         max-width: 100%;
         gap: 8px;
     }
-
-    .file-metadata span:first-of-type {
-        font-size: 1.2rem !important;
-    }
-
     .preview-container {
         padding: 16px;
         border-radius: 16px;
         max-height: 350px;
     }
-
     .preview-header {
         font-size: 0.78rem;
         margin-bottom: 12px;
     }
-
-    .metadata-badge {
-        font-size: 0.75rem;
-        padding: 3px 12px;
-    }
-
     .empty-preview-message {
         min-height: 160px;
         font-size: 0.88rem;
         padding: 16px;
     }
-
     .right-header {
         margin-bottom: 20px;
     }
-
     .page-pill {
         padding: 6px 16px;
         font-size: 0.85rem;
     }
-
     .text-content-panel {
         padding: 20px 16px;
         font-size: 0.9rem;
         line-height: 1.65;
         border-radius: 18px;
     }
-
     .placeholder-text {
         font-size: 0.95rem;
         padding: 24px 16px;
         border-radius: 16px;
     }
-
-    /* Optimize scrollbars for mobile */
-    .preview-container::-webkit-scrollbar,
-    .text-content-panel::-webkit-scrollbar {
-        width: 4px;
+    .file-tab .tab-name {
+        max-width: 80px;
+    }
+    .content-tab .tab-name {
+        max-width: 70px;
     }
 }
 
-/* ============================================ */
-/* RESPONSIVE DESIGN - SMALL MOBILE (<400px)   */
-/* ============================================ */
 @media (max-width: 400px) {
     body {
         padding: 8px;
     }
-
     .app {
         border-radius: 16px;
     }
-
-    .left-panel,
-    .right-panel {
+    .left-panel, .right-panel {
         padding: 16px 12px;
     }
-
-    .section-header h2,
-    .title-group h2 {
+    .section-header h2, .title-group h2 {
         font-size: 1.2rem;
     }
-
-    .section-header .icon,
-    .title-group .icon {
+    .section-header .icon, .title-group .icon {
         width: 36px;
         height: 36px;
         font-size: 18px;
     }
-
     .upload-zone {
         padding: 20px 12px;
     }
-
     .upload-icon-large {
         font-size: 36px;
     }
-
     .upload-label {
         font-size: 0.95rem;
     }
-
     .upload-hint {
         font-size: 0.75rem;
     }
-
     .file-metadata {
         font-size: 0.8rem;
     }
-
     .preview-container {
         padding: 12px;
         max-height: 300px;
     }
-
     .text-content-panel {
         padding: 16px 12px;
         font-size: 0.85rem;
     }
-
     .placeholder-text {
         font-size: 0.88rem;
         padding: 20px 12px;
     }
 }
 
-/* ============================================ */
-/* LANDSCAPE ORIENTATION ON MOBILE             */
-/* ============================================ */
-@media (max-width: 767px) and (orientation: landscape) {
-    .app {
-        flex-direction: row;
-        height: auto;
-        min-height: auto;
-    }
-
-    .left-panel {
-        border-right: 1px solid #e6edf2;
-        border-bottom: none;
-        flex: 0 0 45%;
-        max-height: calc(100vh - 24px);
-        overflow-y: auto;
-    }
-
-    .right-panel {
-        flex: 1;
-        max-height: calc(100vh - 24px);
-    }
-
+/* ===== MOBILE HIDE PREVIEW SECTION ===== */
+@media (max-width: 767px) {
     .preview-container {
-        max-height: 300px;
+        display: none !important;
+    }
+    
+    .preview-header {
+        display: none !important;
+    }
+    
+    .left-panel {
+        padding-bottom: 10px;
+    }
+    
+    .file-metadata {
+        margin-bottom: 5px;
     }
 }
 
-/* ============================================ */
-/* PRINT STYLES                                 */
-/* ============================================ */
 @media print {
     body {
         background: white;
         padding: 0;
     }
-
     .app {
         box-shadow: none;
         border-radius: 0;
         height: auto;
     }
-
     .left-panel {
         display: none;
     }
-
     .right-panel {
         border: none;
         padding: 20px;
     }
-
     .text-content-panel {
         box-shadow: none;
         border: 1px solid #ccc;
